@@ -1,0 +1,46 @@
+-- Seed: 40 temas del temario CEIS Murcia
+-- Parte General (15 temas)
+insert into public.temas (slug, parte, numero, titulo, published, preview_for_free, orden) values
+  ('general-01-constitucion',         'general', 1,  'Constitución 1978. Derechos y deberes.',                       true,  true,  1),
+  ('general-02-corona',               'general', 2,  'La Corona.',                                                   true,  false, 2),
+  ('general-03-poder-legislativo',    'general', 3,  'El Poder Legislativo.',                                        false, false, 3),
+  ('general-04-gobierno-administracion', 'general', 4, 'El Gobierno y la Administración Pública.',                  false, false, 4),
+  ('general-05-poder-judicial',       'general', 5,  'El Poder Judicial.',                                          false, false, 5),
+  ('general-06-organizacion-territorial', 'general', 6, 'Organización Territorial. CCAA Murcia.',                   false, false, 6),
+  ('general-07-regimen-local',        'general', 7,  'Régimen local: municipio, provincia.',                        false, false, 7),
+  ('general-08-personal-aapp',        'general', 8,  'Personal de las AAPP.',                                       false, false, 8),
+  ('general-09-funcion-publica',      'general', 9,  'Función Pública.',                                            false, false, 9),
+  ('general-10-consorcios-ceis',      'general', 10, 'Los Consorcios. El CEIS Murcia.',                             false, false, 10),
+  ('general-11-estatuto-personal',    'general', 11, 'Estatuto del Personal Profesional del CEIS.',                 false, false, 11),
+  ('general-12-region-murcia',        'general', 12, 'La Región de Murcia (geografía, economía).',                  false, false, 12),
+  ('general-13-ley-proteccion-civil', 'general', 13, 'Ley de Protección Civil.',                                    false, false, 13),
+  ('general-14-telefono-112',         'general', 14, 'Teléfono 112. Centros de coordinación. Planes especiales.',   false, false, 14),
+  ('general-15-plan-infomur',         'general', 15, 'Plan INFOMUR.',                                               false, false, 15);
+
+-- Parte Específica (25 temas)
+insert into public.temas (slug, parte, numero, titulo, published, preview_for_free, orden) values
+  ('especifica-01-estructura-territorial',  'especifica', 1,  'Estructura territorial del CEIS.',                   false, false, 16),
+  ('especifica-02-teoria-fuego',            'especifica', 2,  'Teoría del fuego.',                                  false, false, 17),
+  ('especifica-03-proteccion-respiratoria', 'especifica', 3,  'Protección respiratoria (ERAs).',                    false, false, 18),
+  ('especifica-04-explosiones',             'especifica', 4,  'Explosiones (Flashover, Backdraft, BLEVE…).',        false, false, 19),
+  ('especifica-05-materiales-exploracion',  'especifica', 5,  'Materiales de exploración.',                         false, false, 20),
+  ('especifica-06-agentes-liquidos',        'especifica', 6,  'Agentes extintores líquidos.',                       false, false, 21),
+  ('especifica-07-agentes-solidos',         'especifica', 7,  'Agentes extintores sólidos.',                        false, false, 22),
+  ('especifica-08-agentes-gaseosos',        'especifica', 8,  'Agentes extintores gaseosos.',                       false, false, 23),
+  ('especifica-09-ripci',                   'especifica', 9,  'RIPCI.',                                             false, false, 24),
+  ('especifica-10-incendios-forestales',    'especifica', 10, 'Incendios forestales.',                              false, false, 25),
+  ('especifica-11-riesgo-electrico',        'especifica', 11, 'Riesgo eléctrico.',                                  false, false, 26),
+  ('especifica-12-accidentes-trafico',      'especifica', 12, 'Accidentes de tráfico y descarcelación.',            false, false, 27),
+  ('especifica-13-cte',                     'especifica', 13, 'CTE.',                                               false, false, 28),
+  ('especifica-14-rd-1215-97',              'especifica', 14, 'RD 1215/97 (trabajos en altura).',                   false, false, 29),
+  ('especifica-15-apuntalamientos',         'especifica', 15, 'Apuntalamientos y apeos.',                           false, false, 30),
+  ('especifica-16-mercancias-peligrosas',   'especifica', 16, 'Mercancías peligrosas (ADR).',                       false, false, 31),
+  ('especifica-17-plan-transmur',           'especifica', 17, 'Plan TRANSMUR.',                                     false, false, 32),
+  ('especifica-18-dotacion-equipo',         'especifica', 18, 'Dotación y equipo del bombero.',                     false, false, 33),
+  ('especifica-19-legislacion-circulacion', 'especifica', 19, 'Legislación de circulación y vehículos prioritarios.', false, false, 34),
+  ('especifica-20-primeros-auxilios',       'especifica', 20, 'Primeros auxilios.',                                 false, false, 35),
+  ('especifica-21-rcp-traslado',            'especifica', 21, 'RCP y traslado de heridos.',                         false, false, 36),
+  ('especifica-22-lprl-bomberos',           'especifica', 22, 'LPRL aplicada a bomberos.',                          false, false, 37),
+  ('especifica-23-equipos-elevacion',       'especifica', 23, 'Equipos de elevación y tracción.',                   false, false, 38),
+  ('especifica-24-maquinas-hidraulicas',    'especifica', 24, 'Máquinas hidráulicas.',                              false, false, 39),
+  ('especifica-25-rescate-acuatico',        'especifica', 25, 'Rescate en medio acuático.',                         false, false, 40);
