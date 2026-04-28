@@ -14,7 +14,8 @@
       "Bash(node *)",
       "Bash(npm run *)",
       "Bash(git -C /e/OposicionCIESWeb add -A)",
-      "Bash(git -C /e/OposicionCIESWeb status --short)"
+      "Bash(git -C /e/OposicionCIESWeb status --short)",
+      "Bash(git *)"
     ]
   }
 }

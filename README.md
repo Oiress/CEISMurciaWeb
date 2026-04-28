@@ -109,7 +109,7 @@ El endpoint `/api/dev/promote` devuelve 404 en producción (`NODE_ENV !== 'devel
     │   │   └── server.ts
     │   ├── schemas.ts
     │   └── utils.ts
-    ├── middleware.ts
+    ├── proxy.ts
     └── types/database.ts
 ```
 
