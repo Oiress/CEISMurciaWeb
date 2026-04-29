@@ -32,6 +32,12 @@ export interface Profile {
   id: string
   role: string
   created_at: string | null
+  stripe_customer_id: string | null
+  stripe_subscription_id: string | null
+  stripe_price_id: string | null
+  subscription_status: string | null
+  subscription_period_end: string | null
+  cancel_at_period_end: boolean | null
 }
 
 export interface Tema {
@@ -95,8 +101,18 @@ export type Database = {
     Tables: Record<string, IndexableTable> & {
       profiles: {
         Row: Profile
-        Insert: { id: string; role?: string; created_at?: string | null }
-        Update: { id?: string; role?: string; created_at?: string | null }
+        Insert: {
+          id: string; role?: string; created_at?: string | null
+          stripe_customer_id?: string | null; stripe_subscription_id?: string | null
+          stripe_price_id?: string | null; subscription_status?: string | null
+          subscription_period_end?: string | null; cancel_at_period_end?: boolean | null
+        }
+        Update: {
+          id?: string; role?: string; created_at?: string | null
+          stripe_customer_id?: string | null; stripe_subscription_id?: string | null
+          stripe_price_id?: string | null; subscription_status?: string | null
+          subscription_period_end?: string | null; cancel_at_period_end?: boolean | null
+        }
         Relationships: Relationship[]
       }
       temas: {

@@ -23,7 +23,8 @@
       "Bash(xargs head *)",
       "Bash(xargs grep *)",
       "Bash(echo \"Exit: $?\")",
-      "Bash(grep -E \"\\\\.tsx?$\")"
+      "Bash(grep -E \"\\\\.tsx?$\")",
+      "WebFetch(domain:docs.stripe.com)"
     ]
   }
 }
