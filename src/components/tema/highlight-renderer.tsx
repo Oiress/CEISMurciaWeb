@@ -3,49 +3,143 @@
 import { useRef, useEffect, useState } from 'react'
 import { useViewerStore } from '@/store/viewer-store'
 import { HIGHLIGHT_COLORS } from './highlight-colors'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { toast } from 'sonner'
 import type { Annotation } from '@/types/database'
 
+// A segment is a contiguous run of text where the active highlight set is constant.
 interface Segment {
   text: string
-  highlight?: Annotation
+  // Sorted oldest→newest (outer→inner for nesting). Empty = plain text.
+  highlights: Annotation[]
 }
 
-interface HighlightRendererProps {
-  pid: string
-  children: React.ReactNode
-}
-
+/**
+ * Sweepline segmentation: collect every boundary point (range_start / range_end)
+ * across all highlights, then for each interval between consecutive boundaries
+ * record which highlights are active. This preserves ALL overlaps — no winner
+ * picking, no dropping. Highlights with range_start === range_end are ignored.
+ */
 function buildSegments(text: string, highlights: Annotation[]): Segment[] {
-  if (highlights.length === 0 || !text) return [{ text }]
+  const valid = highlights.filter(
+    (h) => h.range_start !== null && h.range_end !== null && h.range_end > h.range_start
+  )
 
-  // Sort by range_start, then by created_at desc (latest wins for overlaps)
-  const sorted = [...highlights]
-    .filter((h) => h.range_start !== null && h.range_end !== null)
-    .sort((a, b) => {
-      if (a.range_start! !== b.range_start!) return a.range_start! - b.range_start!
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    })
+  if (valid.length === 0 || !text) return [{ text, highlights: [] }]
+
+  // Collect all boundary positions within [0, text.length]
+  const boundaries = new Set<number>([0, text.length])
+  for (const h of valid) {
+    if (h.range_start! >= 0 && h.range_start! <= text.length) boundaries.add(h.range_start!)
+    if (h.range_end! >= 0 && h.range_end! <= text.length) boundaries.add(h.range_end!)
+  }
+  const sorted = [...boundaries].sort((a, b) => a - b)
 
   const segments: Segment[] = []
-  let pos = 0
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const from = sorted[i]
+    const to = sorted[i + 1]
+    if (from >= to) continue
+    const slice = text.slice(from, to)
+    if (!slice) continue
 
-  for (const h of sorted) {
-    const start = h.range_start!
-    const end = h.range_end!
-    if (start >= text.length || end <= pos) continue
-    const clampStart = Math.max(start, pos)
-    const clampEnd = Math.min(end, text.length)
-    if (clampStart > pos) segments.push({ text: text.slice(pos, clampStart) })
-    if (clampEnd > clampStart) segments.push({ text: text.slice(clampStart, clampEnd), highlight: h })
-    pos = clampEnd
+    // Which highlights cover this interval? (active if start <= from && end >= to)
+    const active = valid
+      .filter((h) => h.range_start! <= from && h.range_end! >= to)
+      // Sort oldest first → will be outermost <mark>, newest last → innermost
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+
+    segments.push({ text: slice, highlights: active })
   }
 
-  if (pos < text.length) segments.push({ text: text.slice(pos) })
-  return segments
+  // Append any trailing plain text after the last boundary if needed
+  // (already handled because text.length is always a boundary)
+
+  return segments.length > 0 ? segments : [{ text, highlights: [] }]
 }
 
-export function HighlightRenderer({ pid, children }: HighlightRendererProps) {
+/**
+ * Renders a single <mark> layer and recurses for inner layers.
+ * The innermost mark receives the click that opens the popover for the
+ * most-recent (innermost) highlight.
+ */
+function NestedMarks({
+  text,
+  highlights,
+  depth,
+  onColorChange,
+  onDelete,
+}: {
+  text: string
+  highlights: Annotation[]
+  depth: number
+  onColorChange: (h: Annotation, color: Annotation['color']) => Promise<void>
+  onDelete: (h: Annotation) => Promise<void>
+}) {
+  const [open, setOpen] = useState(false)
+  const current = highlights[depth]
+  const bgColor = current.color ? HIGHLIGHT_COLORS[current.color] : HIGHLIGHT_COLORS.yellow
+  const isInnermost = depth === highlights.length - 1
+
+  const content = isInnermost ? text : (
+    <NestedMarks
+      text={text}
+      highlights={highlights}
+      depth={depth + 1}
+      onColorChange={onColorChange}
+      onDelete={onDelete}
+    />
+  )
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        render={
+          <mark
+            data-highlight-id={current.id}
+            style={{ backgroundColor: bgColor, borderRadius: '2px', cursor: 'pointer' }}
+            aria-label="Editar subrayado"
+          />
+        }
+        onClick={(e) => {
+          // Only the innermost mark should open its popover on click.
+          // Stop propagation so outer marks don't also open.
+          if (isInnermost) {
+            e.stopPropagation()
+          }
+        }}
+      >
+        {content}
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-1 flex gap-1" side="top" align="start">
+        {(['yellow', 'green', 'pink', 'blue'] as const).map((c) => (
+          <button
+            key={c}
+            onClick={() => {
+              void onColorChange(current, c)
+              setOpen(false)
+            }}
+            className="w-5 h-5 rounded-full border border-border hover:scale-110 transition-transform"
+            style={{ backgroundColor: HIGHLIGHT_COLORS[c] }}
+            aria-label={`Color ${c}`}
+          />
+        ))}
+        <button
+          onClick={() => {
+            void onDelete(current)
+            setOpen(false)
+          }}
+          className="ml-1 text-xs text-destructive px-1 hover:bg-destructive/10 rounded"
+          aria-label="Eliminar subrayado"
+        >
+          ✕
+        </button>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+export function HighlightRenderer({ pid, children }: { pid: string; children: React.ReactNode }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const [paragraphText, setParagraphText] = useState<string | null>(null)
   const { annotations, updateAnnotation, removeAnnotation } = useViewerStore()
@@ -91,41 +185,16 @@ export function HighlightRenderer({ pid, children }: HighlightRendererProps) {
   return (
     <div ref={wrapperRef}>
       {segments.map((seg, i) => {
-        if (!seg.highlight) return <span key={i}>{seg.text}</span>
-        const h = seg.highlight
-        const bgColor = h.color ? HIGHLIGHT_COLORS[h.color] : HIGHLIGHT_COLORS.yellow
+        if (seg.highlights.length === 0) return <span key={i}>{seg.text}</span>
         return (
-          <mark
+          <NestedMarks
             key={i}
-            data-highlight-id={h.id}
-            style={{ backgroundColor: bgColor, cursor: 'pointer' }}
-            className="relative group/mark"
-            onClick={(e) => {
-              e.stopPropagation()
-              // Mini popover rendered inline via state
-            }}
-          >
-            {seg.text}
-            {/* Mini popover on hover */}
-            <span className="hidden group-hover/mark:flex absolute -top-10 left-0 bg-background border rounded shadow-md gap-1 p-1 z-50">
-              {(['yellow', 'green', 'pink', 'blue'] as const).map((c) => (
-                <button
-                  key={c}
-                  onClick={(e) => { e.stopPropagation(); void handleColorChange(h, c) }}
-                  className="w-4 h-4 rounded-full border border-border"
-                  style={{ backgroundColor: HIGHLIGHT_COLORS[c] }}
-                  aria-label={`Color ${c}`}
-                />
-              ))}
-              <button
-                onClick={(e) => { e.stopPropagation(); void handleDelete(h) }}
-                className="ml-1 text-xs text-destructive px-1"
-                aria-label="Eliminar subrayado"
-              >
-                ✕
-              </button>
-            </span>
-          </mark>
+            text={seg.text}
+            highlights={seg.highlights}
+            depth={0}
+            onColorChange={handleColorChange}
+            onDelete={handleDelete}
+          />
         )
       })}
     </div>

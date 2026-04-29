@@ -22,7 +22,8 @@
       "Bash(mkdir -p \"E:/OposicionCIESWeb/src/app/api/progress/[temaId]\")",
       "Bash(xargs head *)",
       "Bash(xargs grep *)",
-      "Bash(echo \"Exit: $?\")"
+      "Bash(echo \"Exit: $?\")",
+      "Bash(grep -E \"\\\\.tsx?$\")"
     ]
   }
 }
