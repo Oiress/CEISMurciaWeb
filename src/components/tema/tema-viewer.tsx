@@ -88,7 +88,14 @@ export function TemaViewer({ slug, temaId, userRole, canAnnotate }: TemaViewerPr
     void fetch(`/api/progress/${temaId}`)
       .then((r) => r.ok ? r.json() : null)
       .then((progress: { scroll_percent: number; last_paragraph_id: string | null } | null) => {
-        if (!progress || progress.scroll_percent <= 5 || !progress.last_paragraph_id) return
+        console.log('[progress] loaded', progress)
+        const willShow = !!progress && progress.scroll_percent > 5 && !!progress.last_paragraph_id
+        console.log('[progress] toast check', {
+          lastParagraphId: progress?.last_paragraph_id ?? null,
+          scrollPercent: progress?.scroll_percent ?? null,
+          willShow,
+        })
+        if (!willShow) return
         toast('Continuando donde lo dejaste', {
           action: {
             label: 'Ir al inicio',

@@ -63,6 +63,7 @@ export function useProgressTracker({ temaId, enabled }: UseProgressTrackerOption
       if (scrollPercent === prev.scrollPercent && lastPid === prev.lastPid) return
 
       lastSaved.current = { scrollPercent, lastPid }
+      console.log('[progress] saving', { temaId, scrollPercent, lastParagraphId: lastPid })
       void fetch(`/api/progress/${temaId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

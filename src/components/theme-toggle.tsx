@@ -13,7 +13,13 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" aria-label="Cambiar tema" disabled>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Cambiar tema"
+        className="pointer-events-none"
+        suppressHydrationWarning
+      >
         <Sun className="h-4 w-4" />
       </Button>
     )

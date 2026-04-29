@@ -46,6 +46,7 @@ export async function PUT(
   try { body = await request.json() } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
+  console.log('[progress] received', body)
 
   const parsed = upsertProgressSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
