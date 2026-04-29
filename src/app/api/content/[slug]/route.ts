@@ -3,9 +3,55 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { serialize } from 'next-mdx-remote/serialize'
 import fs from 'fs/promises'
 import path from 'path'
-import type { Tema, UserRole } from '@/types/database'
+import type { Tema, UserRole, TocItem } from '@/types/database'
+import { computeParagraphId } from '@/lib/paragraph-id'
 
 type Role = 'guest' | UserRole
+
+// ── Hast types (inline, avoids @types/hast dependency) ────────────────────────
+interface HastText {
+  type: 'text'
+  value: string
+}
+interface HastElement {
+  type: 'element'
+  tagName: string
+  properties: Record<string, unknown>
+  children: HastNode[]
+}
+interface HastRoot {
+  type: 'root'
+  children: HastNode[]
+}
+type HastNode = HastText | HastElement | HastRoot | { type: string }
+
+// Inline hast walker — avoids unist-util-visit dependency
+function walkHast(node: HastNode, visitor: (node: HastNode) => void): void {
+  visitor(node)
+  if ('children' in node && Array.isArray(node.children)) {
+    for (const child of node.children) walkHast(child, visitor)
+  }
+}
+
+function getTextContent(node: HastNode): string {
+  if (node.type === 'text') return (node as HastText).value
+  if ('children' in node && Array.isArray(node.children)) {
+    return (node.children as HastNode[]).map(getTextContent).join('')
+  }
+  return ''
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+}
+
+const ANNOTATABLE_TAGS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote'])
+const HEADING_TAGS = new Set(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
 
 function extractTeaser(mdx: string): string {
   // Simple paragraph extraction — does not handle all MDX syntax
@@ -78,11 +124,49 @@ export async function GET(
   }
 
   const content = hasFullAccess ? rawMdx : extractTeaser(rawMdx)
-  const source = await serialize(content)
+
+  // 5. Build rehype plugin that assigns data-pid to annotatable blocks
+  const toc: TocItem[] = []
+
+  const rehypeParagraphIds = () => (tree: HastNode) => {
+    const counters: Record<string, number> = {}
+
+    walkHast(tree, (node) => {
+      if (node.type !== 'element') return
+      const el = node as HastElement
+      if (!ANNOTATABLE_TAGS.has(el.tagName)) return
+
+      const tagName = el.tagName
+      if (counters[tagName] === undefined) counters[tagName] = 0
+      const index = counters[tagName]++
+
+      const text = getTextContent(el)
+      const pid = computeParagraphId(tagName, index, text)
+      el.properties['data-pid'] = pid
+
+      if (HEADING_TAGS.has(tagName)) {
+        const headingSlug = slugify(text)
+        el.properties['id'] = headingSlug
+        toc.push({
+          level: parseInt(tagName[1], 10),
+          text,
+          pid,
+        })
+      }
+    })
+  }
+
+  const source = await serialize(content, {
+    mdxOptions: {
+      rehypePlugins: [rehypeParagraphIds],
+    },
+  })
 
   return NextResponse.json({
     source,
     paywalled: !hasFullAccess,
     titulo: tema.titulo,
+    temaId: tema.id,
+    toc,
   })
 }

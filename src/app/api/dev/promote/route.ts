@@ -16,8 +16,8 @@ export async function POST() {
   }
 
   const serviceClient = createSupabaseServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (serviceClient.from('profiles') as any)
+  const { error } = await serviceClient
+    .from('profiles')
     .update({ role: 'premium' })
     .eq('id', user.id)
 

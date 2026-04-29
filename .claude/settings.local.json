@@ -15,7 +15,14 @@
       "Bash(npm run *)",
       "Bash(git -C /e/OposicionCIESWeb add -A)",
       "Bash(git -C /e/OposicionCIESWeb status --short)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(mkdir -p \"E:/OposicionCIESWeb/src/app/api/annotations/[id]\")",
+      "Bash(mkdir -p \"E:/OposicionCIESWeb/src/app/api/summaries/[temaId]\")",
+      "Bash(mkdir -p \"E:/OposicionCIESWeb/src/app/api/drawings/[temaId]\")",
+      "Bash(mkdir -p \"E:/OposicionCIESWeb/src/app/api/progress/[temaId]\")",
+      "Bash(xargs head *)",
+      "Bash(xargs grep *)",
+      "Bash(echo \"Exit: $?\")"
     ]
   }
 }
